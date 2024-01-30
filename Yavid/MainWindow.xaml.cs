@@ -10,7 +10,7 @@ namespace Yavid;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow
 {
     public static readonly DependencyProperty PlaylistUrlProperty =
         DependencyProperty.Register(nameof(PlaylistUrl), typeof(string), typeof(MainWindow), new(string.Empty));
@@ -39,9 +39,9 @@ public partial class MainWindow : Window
         set => SetValue(StatusProperty, value);
     }
 
-    private void WriteStatus(string status)
+    private void WriteStatus(string status, string topic = "")
     {
-        status = $"[{DateTime.Now:HH:mm:ss}] {status}";
+        status = $"[{DateTime.Now:HH:mm:ss}] {(string.IsNullOrEmpty(topic) ? "" : $"[{topic}] ")}{status}";
 
         Dispatcher?.Invoke(() => Status = status + Environment.NewLine + Status);
     }
@@ -116,8 +116,8 @@ public partial class MainWindow : Window
                 "--embed-thumbnail",
                 PlaylistUrl,
             ])
-            .WithStandardOutputPipe(PipeTarget.ToDelegate(WriteStatus))
-            .WithStandardErrorPipe(PipeTarget.ToDelegate(WriteStatus));
+            .WithStandardOutputPipe(PipeTarget.ToDelegate(s => WriteStatus(s, "youtube-dl")))
+            .WithStandardErrorPipe(PipeTarget.ToDelegate(s => WriteStatus(s, "youtube-dl")));
 
         WriteStatus("Running command: " + command);
 
