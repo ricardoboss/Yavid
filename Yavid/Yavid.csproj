@@ -8,6 +8,7 @@
         <UseWPF>true</UseWPF>
         <AssemblyVersion>1.1.0</AssemblyVersion>
         <FileVersion>1.1.0</FileVersion>
+        <RepositoryUrl>https://github.com/ricardoboss/Yavid.git</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,6 +26,10 @@
 
     <ItemGroup>
       <PackageReference Include="CliWrap" Version="3.6.6" />
+      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 
 </Project>
