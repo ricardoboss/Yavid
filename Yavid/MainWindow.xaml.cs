@@ -36,6 +36,8 @@ public partial class MainWindow
 
         DataContext = this;
 
+        OutputFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
         WriteStatus("Ready.");
     }
 
