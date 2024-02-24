@@ -7,28 +7,47 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance local:MainWindow}"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="10" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="10" />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="10" />
-            <ColumnDefinition />
-        </Grid.ColumnDefinitions>
-        
-        <TextBlock Grid.Row="0" Grid.Column="0">1. Paste Playlist Url:</TextBlock>
-        <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding Path=PlaylistUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-        <TextBlock Grid.Row="2" Grid.Column="0">2. Click:</TextBlock>
-        <Button Grid.Row="2" Grid.Column="2" Content="Download" Click="DownloadButton_Click" />
-        <TextBlock Grid.Row="4" Grid.Column="0">3. Observe:</TextBlock>
-        <ScrollViewer Grid.Row="4" Grid.Column="2">
-            <TextBlock Text="{Binding Path=Status, Mode=OneWay}" />
-        </ScrollViewer>
-    </Grid>
+    <Border Padding="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Row="0" Grid.Column="0">1. Choose output folder:</TextBlock>
+            <TextBox Grid.Row="0" Grid.Column="2" Padding="5" Text="{Binding Path=OutputFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Grid.Row="0" Grid.Column="4" Padding="15,5" Click="ChooseOutputFolder_Click">Choose</Button>
+            <CheckBox Grid.Row="2" Grid.Column="2" IsChecked="{Binding Path=OpenOutputAfterDownload, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">Open after download</CheckBox>
+            <TextBlock Grid.Row="4" Grid.Column="0">2. Paste Url:</TextBlock>
+            <TextBox Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3" Padding="5" Text="{Binding Path=PlaylistUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding Path=IncludeThumbnails, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">Include Thumbnail</CheckBox>
+                <Separator Width="10" Background="Transparent" />
+                <CheckBox IsChecked="{Binding Path=OnlyKeepAudio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">Only keep Audio</CheckBox>
+            </StackPanel>
+            <TextBlock Grid.Row="8" Grid.Column="0">3. Click:</TextBlock>
+            <Button Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3" Padding="15,5" Click="DownloadButton_Click">Download</Button>
+            <TextBlock Grid.Row="10" Grid.Column="0">4. Observe:</TextBlock>
+            <ScrollViewer Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3">
+                <TextBlock Text="{Binding Path=Status, Mode=OneWay}" />
+            </ScrollViewer>
+        </Grid>
+    </Border>
 </Window>

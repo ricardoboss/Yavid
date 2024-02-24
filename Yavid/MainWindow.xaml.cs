@@ -12,8 +12,20 @@ namespace Yavid;
 /// </summary>
 public partial class MainWindow
 {
+    public static readonly DependencyProperty OutputFolderProperty =
+        DependencyProperty.Register(nameof(OutputFolder), typeof(string), typeof(MainWindow), new(string.Empty));
+
+    public static readonly DependencyProperty OpenOutputAfterDownloadProperty =
+        DependencyProperty.Register(nameof(OpenOutputAfterDownload), typeof(bool), typeof(MainWindow), new(true));
+
     public static readonly DependencyProperty PlaylistUrlProperty =
         DependencyProperty.Register(nameof(PlaylistUrl), typeof(string), typeof(MainWindow), new(string.Empty));
+
+    public static readonly DependencyProperty IncludeThumbnailsProperty =
+        DependencyProperty.Register(nameof(IncludeThumbnails), typeof(bool), typeof(MainWindow), new(true));
+
+    public static readonly DependencyProperty OnlyKeepAudioProperty =
+        DependencyProperty.Register(nameof(OnlyKeepAudio), typeof(bool), typeof(MainWindow), new(true));
 
     public static readonly DependencyProperty StatusProperty =
         DependencyProperty.Register(nameof(Status), typeof(string), typeof(MainWindow), new(string.Empty));
@@ -25,6 +37,30 @@ public partial class MainWindow
         DataContext = this;
 
         WriteStatus("Ready.");
+    }
+
+    public string OutputFolder
+    {
+        get => (string)GetValue(OutputFolderProperty)!;
+        set => SetValue(OutputFolderProperty, value);
+    }
+
+    public bool OpenOutputAfterDownload
+    {
+        get => (bool)GetValue(OpenOutputAfterDownloadProperty)!;
+        set => SetValue(OpenOutputAfterDownloadProperty, value);
+    }
+
+    public bool IncludeThumbnails
+    {
+        get => (bool)GetValue(IncludeThumbnailsProperty)!;
+        set => SetValue(IncludeThumbnailsProperty, value);
+    }
+
+    public bool OnlyKeepAudio
+    {
+        get => (bool)GetValue(OnlyKeepAudioProperty)!;
+        set => SetValue(OnlyKeepAudioProperty, value);
     }
 
     public string PlaylistUrl
@@ -51,6 +87,11 @@ public partial class MainWindow
         _ = DoDownload();
     }
 
+    private void ChooseOutputFolder_Click(object sender, RoutedEventArgs e)
+    {
+        OutputFolder = AskForOutputFolder() ?? string.Empty;
+    }
+
     private async Task DoDownload()
     {
         if (!VerifyCanRun()) return;
@@ -58,15 +99,7 @@ public partial class MainWindow
         var toolsReader = PrepareTools(out var youtubeDlPath, out var ffmpegPath);
         if (!toolsReader) return;
 
-        var outputFolder = AskForOutputFolder();
-        if (outputFolder is null)
-        {
-            WriteStatus("No output folder selected. Aborting.");
-
-            return;
-        }
-
-        var success = await InvokeYoutubeDl(youtubeDlPath, ffmpegPath, outputFolder);
+        var success = await InvokeYoutubeDl(youtubeDlPath, ffmpegPath, OutputFolder);
         if (!success)
         {
             WriteStatus("youtube-dl invocation failed. Aborting.");
@@ -74,7 +107,8 @@ public partial class MainWindow
             return;
         }
 
-        OpenResultFolder(outputFolder);
+        if (OpenOutputAfterDownload)
+            OpenResultFolder(OutputFolder);
 
         WriteStatus("Done!");
     }
@@ -107,15 +141,33 @@ public partial class MainWindow
     {
         WriteStatus("Invoking youtube-dl...");
 
-        var command = Cli.Wrap(youtubeDlPath)
-            .WithArguments([
+        List<string> arguments = [
+            "--ffmpeg-location", ffmpegPath,
+            "--output", Path.Combine(outputFolder, "%(title)s.%(ext)s"),
+        ];
+
+        if (OnlyKeepAudio)
+        {
+            arguments.AddRange([
                 "--extract-audio",
                 "--audio-format", "mp3",
-                "--ffmpeg-location", ffmpegPath,
-                "--output", Path.Combine(outputFolder, "%(title)s.%(ext)s"),
-                "--embed-thumbnail",
-                PlaylistUrl,
-            ])
+            ]);
+        }
+        else
+        {
+            arguments.AddRange([
+                "--format", "best",
+                "--embed-metadata",
+            ]);
+        }
+
+        if (IncludeThumbnails)
+            arguments.Add("--embed-thumbnail");
+
+        arguments.Add(PlaylistUrl);
+
+        var command = Cli.Wrap(youtubeDlPath)
+            .WithArguments(arguments)
             .WithStandardOutputPipe(PipeTarget.ToDelegate(s => WriteStatus(s, "youtube-dl")))
             .WithStandardErrorPipe(PipeTarget.ToDelegate(s => WriteStatus(s, "youtube-dl")));
 
@@ -129,6 +181,13 @@ public partial class MainWindow
     [SuppressMessage("ReSharper", "InvertIf")]
     private bool VerifyCanRun()
     {
+        if (string.IsNullOrWhiteSpace(OutputFolder))
+        {
+            WriteStatus("Please select an output folder");
+
+            return false;
+        }
+        
         if (string.IsNullOrWhiteSpace(PlaylistUrl))
         {
             WriteStatus("Please enter a playlist URL");
