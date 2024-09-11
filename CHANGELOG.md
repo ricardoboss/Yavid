@@ -1,4 +1,10 @@
-﻿# 1.1.0
+﻿# 1.2.0
+
+- Updated yt-dlp to 2024.08.06
+- Updated ffmpeg to 7.0.2
+- User preferences are now stored in the registry
+
+# 1.1.0
 
 - Added checkboxes to choose
   - whether to only keep audio or output video files
