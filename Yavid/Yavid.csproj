@@ -1,35 +1,141 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <UseWPF>true</UseWPF>
-        <AssemblyVersion>1.1.0</AssemblyVersion>
-        <FileVersion>1.1.0</FileVersion>
-        <RepositoryUrl>https://github.com/ricardoboss/Yavid.git</RepositoryUrl>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <FileVersion>1.1.0</FileVersion>
+    <RepositoryUrl>https://github.com/ricardoboss/Yavid.git</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="assets\"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <AssetsFolder>$(MSBuildThisFileDirectory)assets\</AssetsFolder>
+
+    <YtDlpVersion>2024.08.06</YtDlpVersion>
+    <YtDlpFileName>yt-dlp.exe</YtDlpFileName>
+    <YtDlpDownloadUrl>https://github.com/yt-dlp/yt-dlp/releases/download/$(YtDlpVersion)/yt-dlp.exe</YtDlpDownloadUrl>
+    <YtDlpToolPath>$(AssetsFolder)$(YtDlpFileName)</YtDlpToolPath>
+
+    <FfmpegVersion>7.0.2</FfmpegVersion>
+    <FfmpegFileName>ffmpeg.exe</FfmpegFileName>
+    <FfmpegDownloadUrl>https://github.com/GyanD/codexffmpeg/releases/download/$(FfmpegVersion)/ffmpeg-$(FfmpegVersion)-full_build-shared.zip</FfmpegDownloadUrl>
+    <FfmpegZipFileName>ffmpeg-$(FfmpegVersion)-full_build-shared.zip</FfmpegZipFileName>
+    <FfmpegZipFilePath>$(AssetsFolder)$(FfmpegZipFileName)</FfmpegZipFilePath>
+    <FfmpegUnpackedFolder>$(AssetsFolder)ffmpeg-$(FfmpegVersion)-full_build-shared\</FfmpegUnpackedFolder>
+    <FfmpegToolPath>$(AssetsFolder)$(FfmpegFileName)</FfmpegToolPath>
+  </PropertyGroup>
+
+  <Target
+      Name="DownloadYtDlp"
+      BeforeTargets="BeforeBuild"
+      Inputs="$(YtDlpDownloadUrl)"
+      Outputs="$(YtDlpToolPath)"
+  >
+    <Message Text="yt-dlp $(YtDlpVersion) already downloaded"
+             Importance="high"
+             Condition="Exists('$(YtDlpToolPath)')"
+    />
+
+    <Message Text="Downloading yt-dlp $(YtDlpVersion)..."
+             Importance="high"
+             Condition="!Exists('$(YtDlpToolPath)')"
+    />
+    <DownloadFile
+        SourceUrl="$(YtDlpDownloadUrl)"
+        DestinationFolder="$(AssetsFolder)"
+        DestinationFileName="$(YtDlpFileName)"
+        Condition="!Exists('$(YtDlpToolPath)')"
+    />
+  </Target>
+
+  <Target
+      Name="DownloadFfmpeg"
+      BeforeTargets="UnpackFfmpeg"
+      Inputs="$(FfmpegDownloadUrl)"
+      Outputs="$(FfmpegZipFilePath)"
+      Condition="!Exists('$(FfmpegToolPath)')"
+  >
+    <Message Text="ffmpeg $(FfmpegVersion) already downloaded"
+             Importance="high"
+             Condition="Exists('$(FfmpegZipFilePath)')"
+    />
+
+    <Message Text="Downloading ffmpeg $(FfmpegVersion)..."
+             Importance="high"
+             Condition="!Exists('$(FfmpegZipFilePath)')"
+    />
+
+    <DownloadFile
+        SourceUrl="$(FfmpegDownloadUrl)"
+        DestinationFolder="$(AssetsFolder)"
+        DestinationFileName="$(FfmpegZipFileName)"
+        Condition="!Exists('$(FfmpegZipFilePath)')"
+    />
+  </Target>
+
+  <Target
+      Name="UnpackFfmpeg"
+      BeforeTargets="BeforeBuild"
+      Inputs="$(FfmpegZipFilePath)"
+      Outputs="$(FfmpegToolPath)"
+  >
+    <Message Text="ffmpeg $(FfmpegVersion) already unpacked"
+             Importance="high"
+             Condition="Exists('$(FfmpegToolPath)')"
+    />
+
+    <Message Text="Unpacking ffmpeg $(FfmpegVersion)..."
+             Importance="high"
+             Condition="!Exists('$(FfmpegToolPath)')"
+    />
+
+    <Unzip
+        SourceFiles="$(FfmpegZipFilePath)"
+        DestinationFolder="$(FfmpegUnpackedFolder)"
+        Condition="!Exists('$(FfmpegToolPath)')"
+    />
 
     <ItemGroup>
-      <Folder Include="assets\" />
+      <BinFiles Include="$(FfmpegUnpackedFolder)ffmpeg-$(FfmpegVersion)-full_build-shared\bin\*.*"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="assets\ffmpeg.exe">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="assets\yt-dlp.exe">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
+    <Move
+        SourceFiles="@(BinFiles)"
+        DestinationFolder="$(AssetsFolder)"
+        Condition="!Exists('$(FfmpegToolPath)')"
+    />
+  </Target>
+
+  <Target Name="CleanFfmpeg" AfterTargets="UnpackFfmpeg" Condition="Exists('$(FfmpegUnpackedFolder)') or Exists('$(FfmpegZipFilePath)')">
+    <Message Text="Cleaning ffmpeg download..." Importance="high"/>
 
     <ItemGroup>
-      <PackageReference Include="CliWrap" Version="3.6.6" />
-      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
+      <UnpackedFiles Include="$(FfmpegUnpackedFolder)/**"/>
     </ItemGroup>
+
+    <Delete Files="@(UnpackedFiles)" Condition="Exists('$(FfmpegUnpackedFolder)')"/>
+    <Delete Files="$(FfmpegZipFilePath)" Condition="Exists('$(FfmpegZipFilePath)')"/>
+  </Target>
+
+  <ItemGroup>
+    <Content Include="$(AssetsFolder)*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CliWrap" Version="3.6.6"/>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>

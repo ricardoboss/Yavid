@@ -110,7 +110,7 @@ public partial class MainWindow
         }
 
         if (OpenOutputAfterDownload)
-            OpenResultFolder(OutputFolder);
+            OpenOutputFolder(OutputFolder);
 
         WriteStatus("Done!");
     }
@@ -128,9 +128,9 @@ public partial class MainWindow
         return dialog.ShowDialog() != true ? null : dialog.FolderName;
     }
 
-    private void OpenResultFolder(string outputFolder)
+    private void OpenOutputFolder(string outputFolder)
     {
-        WriteStatus("Opening result folder...");
+        WriteStatus("Opening output folder...");
 
         Process.Start(new ProcessStartInfo
         {
@@ -189,7 +189,7 @@ public partial class MainWindow
 
             return false;
         }
-        
+
         if (string.IsNullOrWhiteSpace(PlaylistUrl))
         {
             WriteStatus("Please enter a playlist URL");
@@ -206,7 +206,7 @@ public partial class MainWindow
 
         youtubeDlPath = Path.Combine(Environment.CurrentDirectory, "assets", "yt-dlp.exe");
         ffmpegPath = Path.Combine(Environment.CurrentDirectory, "assets", "ffmpeg.exe");
-        
+
         if (!File.Exists(youtubeDlPath))
         {
             WriteStatus($"youtube-dl not found at '{youtubeDlPath}'. Aborting.");
