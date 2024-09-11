@@ -13,19 +13,23 @@ namespace Yavid;
 public partial class MainWindow
 {
     public static readonly DependencyProperty OutputFolderProperty =
-        DependencyProperty.Register(nameof(OutputFolder), typeof(string), typeof(MainWindow), new(string.Empty));
+        DependencyProperty.Register(nameof(OutputFolder), typeof(string), typeof(MainWindow),
+            new(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), OutputFolderChanged));
 
     public static readonly DependencyProperty OpenOutputAfterDownloadProperty =
-        DependencyProperty.Register(nameof(OpenOutputAfterDownload), typeof(bool), typeof(MainWindow), new(true));
+        DependencyProperty.Register(nameof(OpenOutputAfterDownload), typeof(bool), typeof(MainWindow),
+            new(true, OpenOutputAfterDownloadChanged));
 
     public static readonly DependencyProperty PlaylistUrlProperty =
         DependencyProperty.Register(nameof(PlaylistUrl), typeof(string), typeof(MainWindow), new(string.Empty));
 
     public static readonly DependencyProperty IncludeThumbnailsProperty =
-        DependencyProperty.Register(nameof(IncludeThumbnails), typeof(bool), typeof(MainWindow), new(true));
+        DependencyProperty.Register(nameof(IncludeThumbnails), typeof(bool), typeof(MainWindow),
+            new(true, IncludeThumbnailsChanged));
 
     public static readonly DependencyProperty OnlyKeepAudioProperty =
-        DependencyProperty.Register(nameof(OnlyKeepAudio), typeof(bool), typeof(MainWindow), new(true));
+        DependencyProperty.Register(nameof(OnlyKeepAudio), typeof(bool), typeof(MainWindow),
+            new(true, OnlyKeepAudioChanged));
 
     public static readonly DependencyProperty StatusProperty =
         DependencyProperty.Register(nameof(Status), typeof(string), typeof(MainWindow), new(string.Empty));
@@ -36,9 +40,34 @@ public partial class MainWindow
 
         DataContext = this;
 
-        OutputFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        OutputFolder = GetFromRegistry(nameof(OutputFolder),
+            Environment.GetFolderPath(Environment.SpecialFolder.Desktop))!;
+        OpenOutputAfterDownload = GetFromRegistry(nameof(OpenOutputAfterDownload), bool.TrueString)! == bool.TrueString;
+        IncludeThumbnails = GetFromRegistry(nameof(IncludeThumbnails), bool.TrueString)! == bool.TrueString;
+        OnlyKeepAudio = GetFromRegistry(nameof(OnlyKeepAudio), bool.TrueString)! == bool.TrueString;
 
         WriteStatus("Ready.");
+    }
+
+    private static string? GetFromRegistry(string propertyName, string? defaultValue = null)
+    {
+        var key = Registry.CurrentUser.OpenSubKey(@"Software\Yavid");
+
+        return key?.GetValue(propertyName, defaultValue) as string;
+    }
+
+    private static void SetInRegistry(string propertyName, string value)
+    {
+        var key = Registry.CurrentUser.CreateSubKey(@"Software\Yavid");
+
+        key.SetValue(propertyName, value, RegistryValueKind.String);
+    }
+
+    private static void SetInRegistry(string propertyName, bool value)
+    {
+        var key = Registry.CurrentUser.CreateSubKey(@"Software\Yavid");
+
+        key.SetValue(propertyName, value ? bool.TrueString : bool.FalseString, RegistryValueKind.String);
     }
 
     public string OutputFolder
@@ -47,10 +76,24 @@ public partial class MainWindow
         set => SetValue(OutputFolderProperty, value);
     }
 
+    private static void OutputFolderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var newValue = (string)e.NewValue!;
+
+        SetInRegistry(nameof(OutputFolder), newValue);
+    }
+
     public bool OpenOutputAfterDownload
     {
         get => (bool)GetValue(OpenOutputAfterDownloadProperty)!;
         set => SetValue(OpenOutputAfterDownloadProperty, value);
+    }
+
+    private static void OpenOutputAfterDownloadChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var newValue = (bool)e.NewValue!;
+
+        SetInRegistry(nameof(OpenOutputAfterDownload), newValue);
     }
 
     public bool IncludeThumbnails
@@ -59,10 +102,24 @@ public partial class MainWindow
         set => SetValue(IncludeThumbnailsProperty, value);
     }
 
+    private static void IncludeThumbnailsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var newValue = (bool)e.NewValue!;
+
+        SetInRegistry(nameof(IncludeThumbnails), newValue);
+    }
+
     public bool OnlyKeepAudio
     {
         get => (bool)GetValue(OnlyKeepAudioProperty)!;
         set => SetValue(OnlyKeepAudioProperty, value);
+    }
+
+    private static void OnlyKeepAudioChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var newValue = (bool)e.NewValue!;
+
+        SetInRegistry(nameof(OnlyKeepAudio), newValue);
     }
 
     public string PlaylistUrl
@@ -143,7 +200,8 @@ public partial class MainWindow
     {
         WriteStatus("Invoking youtube-dl...");
 
-        List<string> arguments = [
+        List<string> arguments =
+        [
             "--ffmpeg-location", ffmpegPath,
             "--output", Path.Combine(outputFolder, "%(title)s.%(ext)s"),
         ];
@@ -192,7 +250,7 @@ public partial class MainWindow
 
         if (string.IsNullOrWhiteSpace(PlaylistUrl))
         {
-            WriteStatus("Please enter a playlist URL");
+            WriteStatus("Please enter a video/playlist URL");
 
             return false;
         }
