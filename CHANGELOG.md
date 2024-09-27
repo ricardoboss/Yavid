@@ -1,4 +1,8 @@
-﻿# 1.2.0
+﻿# Unreleased
+
+- Don't override yt-dlp's default format choice
+
+# 1.2.0
 
 - Updated yt-dlp to 2024.08.06
 - Updated ffmpeg to 7.0.2
