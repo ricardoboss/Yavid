@@ -216,7 +216,7 @@ public partial class MainWindow
         else
         {
             arguments.AddRange([
-                "--format", "best",
+                // "--format", "best", // Apparently this does in fact _not_ choose the best format
                 "--embed-metadata",
             ]);
         }
