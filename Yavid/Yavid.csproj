@@ -6,29 +6,28 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <AssemblyVersion>1.2.1</AssemblyVersion>
-    <FileVersion>1.2.1</FileVersion>
+    <AssemblyVersion>1.2.2</AssemblyVersion>
+    <FileVersion>1.2.2</FileVersion>
     <RepositoryUrl>https://github.com/ricardoboss/Yavid.git</RepositoryUrl>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="assets\"/>
-  </ItemGroup>
-
   <PropertyGroup>
     <AssetsFolder>$(MSBuildThisFileDirectory)assets\</AssetsFolder>
+    <DownloadFolder>$(BaseIntermediateOutputPath)download\</DownloadFolder>
 
-    <YtDlpVersion>2024.08.06</YtDlpVersion>
+    <YtDlpVersion>2024.12.23</YtDlpVersion>
     <YtDlpFileName>yt-dlp.exe</YtDlpFileName>
     <YtDlpDownloadUrl>https://github.com/yt-dlp/yt-dlp/releases/download/$(YtDlpVersion)/yt-dlp.exe</YtDlpDownloadUrl>
+    <YtDlpDownloadFolder>$(DownloadFolder)\yt-dlp-$(YtDlpVersion)\</YtDlpDownloadFolder>
     <YtDlpToolPath>$(AssetsFolder)$(YtDlpFileName)</YtDlpToolPath>
 
-    <FfmpegVersion>7.0.2</FfmpegVersion>
+    <FfmpegVersion>7.1</FfmpegVersion>
     <FfmpegFileName>ffmpeg.exe</FfmpegFileName>
     <FfmpegDownloadUrl>https://github.com/GyanD/codexffmpeg/releases/download/$(FfmpegVersion)/ffmpeg-$(FfmpegVersion)-full_build-shared.zip</FfmpegDownloadUrl>
     <FfmpegZipFileName>ffmpeg-$(FfmpegVersion)-full_build-shared.zip</FfmpegZipFileName>
-    <FfmpegZipFilePath>$(AssetsFolder)$(FfmpegZipFileName)</FfmpegZipFilePath>
-    <FfmpegUnpackedFolder>$(AssetsFolder)ffmpeg-$(FfmpegVersion)-full_build-shared\</FfmpegUnpackedFolder>
+    <FfmpegDownloadFolder>$(DownloadFolder)</FfmpegDownloadFolder>
+    <FfmpegDownloadFile>$(FfmpegDownloadFolder)$(FfmpegZipFileName)</FfmpegDownloadFile>
+    <FfmpegUnpackedFolder>$(BaseIntermediateOutputPath)ffmpeg-$(FfmpegVersion)-full_build-shared\</FfmpegUnpackedFolder>
     <FfmpegToolPath>$(AssetsFolder)$(FfmpegFileName)</FfmpegToolPath>
   </PropertyGroup>
 
@@ -40,17 +39,22 @@
   >
     <Message Text="yt-dlp $(YtDlpVersion) already downloaded"
              Importance="high"
-             Condition="Exists('$(YtDlpToolPath)')"
+             Condition="Exists('$(YtDlpDownloadCache)')"
     />
 
     <Message Text="Downloading yt-dlp $(YtDlpVersion)..."
              Importance="high"
-             Condition="!Exists('$(YtDlpToolPath)')"
+             Condition="!Exists('$(YtDlpDownloadCache)')"
     />
     <DownloadFile
         SourceUrl="$(YtDlpDownloadUrl)"
-        DestinationFolder="$(AssetsFolder)"
+        DestinationFolder="$(YtDlpDownloadFolder)"
         DestinationFileName="$(YtDlpFileName)"
+        Condition="!Exists('$(YtDlpDownloadFolder)$(YtDlpFileName)')"
+    />
+    <Copy
+        SourceFiles="$(YtDlpDownloadFolder)$(YtDlpFileName)"
+        DestinationFolder="$(AssetsFolder)"
         Condition="!Exists('$(YtDlpToolPath)')"
     />
   </Target>
@@ -59,31 +63,31 @@
       Name="DownloadFfmpeg"
       BeforeTargets="UnpackFfmpeg"
       Inputs="$(FfmpegDownloadUrl)"
-      Outputs="$(FfmpegZipFilePath)"
-      Condition="!Exists('$(FfmpegToolPath)')"
+      Outputs="$(FfmpegDownloadFile)"
+      Condition="!Exists('$(FfmpegDownloadFile)')"
   >
     <Message Text="ffmpeg $(FfmpegVersion) already downloaded"
              Importance="high"
-             Condition="Exists('$(FfmpegZipFilePath)')"
+             Condition="Exists('$(FfmpegDownloadFile)')"
     />
 
     <Message Text="Downloading ffmpeg $(FfmpegVersion)..."
              Importance="high"
-             Condition="!Exists('$(FfmpegZipFilePath)')"
+             Condition="!Exists('$(FfmpegDownloadFile)')"
     />
 
     <DownloadFile
         SourceUrl="$(FfmpegDownloadUrl)"
-        DestinationFolder="$(AssetsFolder)"
+        DestinationFolder="$(FfmpegDownloadFolder)"
         DestinationFileName="$(FfmpegZipFileName)"
-        Condition="!Exists('$(FfmpegZipFilePath)')"
+        Condition="!Exists('$(FfmpegDownloadFile)')"
     />
   </Target>
 
   <Target
       Name="UnpackFfmpeg"
       BeforeTargets="BeforeBuild"
-      Inputs="$(FfmpegZipFilePath)"
+      Inputs="$(FfmpegDownloadFile)"
       Outputs="$(FfmpegToolPath)"
   >
     <Message Text="ffmpeg $(FfmpegVersion) already unpacked"
@@ -97,7 +101,7 @@
     />
 
     <Unzip
-        SourceFiles="$(FfmpegZipFilePath)"
+        SourceFiles="$(FfmpegDownloadFile)"
         DestinationFolder="$(FfmpegUnpackedFolder)"
         Condition="!Exists('$(FfmpegToolPath)')"
     />
@@ -127,6 +131,7 @@
   <ItemGroup>
     <Content Include="$(AssetsFolder)*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 
