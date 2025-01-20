@@ -34,6 +34,9 @@ public partial class MainWindow
     public static readonly DependencyProperty StatusProperty =
         DependencyProperty.Register(nameof(Status), typeof(string), typeof(MainWindow), new(string.Empty));
 
+    public static readonly DependencyProperty UnlockControlsProperty =
+        DependencyProperty.Register(nameof(UnlockControls), typeof(bool), typeof(MainWindow), new(true));
+
     public MainWindow()
     {
         InitializeComponent();
@@ -56,11 +59,14 @@ public partial class MainWindow
         return key?.GetValue(propertyName, defaultValue) as string;
     }
 
-    private static void SetInRegistry(string propertyName, string value)
+    private static void SetInRegistry(string propertyName, string? value)
     {
         var key = Registry.CurrentUser.CreateSubKey(@"Software\Yavid");
 
-        key.SetValue(propertyName, value, RegistryValueKind.String);
+        if (value is null)
+            key.DeleteValue(propertyName, false);
+        else
+            key.SetValue(propertyName, value, RegistryValueKind.String);
     }
 
     private static void SetInRegistry(string propertyName, bool value)
@@ -134,16 +140,27 @@ public partial class MainWindow
         set => SetValue(StatusProperty, value);
     }
 
+    public bool UnlockControls
+    {
+        get => (bool)GetValue(UnlockControlsProperty)!;
+        set => SetValue(UnlockControlsProperty, value);
+    }
+
     private void WriteStatus(string status, string topic = "")
     {
         status = $"[{DateTime.Now:HH:mm:ss}] {(string.IsNullOrEmpty(topic) ? "" : $"[{topic}] ")}{status}";
 
-        Dispatcher?.Invoke(() => Status = status + Environment.NewLine + Status);
+        Dispatcher?.Invoke(() =>
+        {
+            var updatedStatus = status + Environment.NewLine + Status;
+
+            Status = updatedStatus.Length > 2000 ? updatedStatus[..2000] : updatedStatus;
+        });
     }
 
-    private void DownloadButton_Click(object sender, RoutedEventArgs e)
+    private async void DownloadButton_Click(object sender, RoutedEventArgs e)
     {
-        _ = DoDownload();
+        await DoDownload();
     }
 
     private void ChooseOutputFolder_Click(object sender, RoutedEventArgs e)
@@ -153,23 +170,36 @@ public partial class MainWindow
 
     private async Task DoDownload()
     {
-        if (!VerifyCanRun()) return;
-
-        var toolsReader = PrepareTools(out var youtubeDlPath, out var ffmpegPath);
-        if (!toolsReader) return;
-
-        var success = await InvokeYoutubeDl(youtubeDlPath, ffmpegPath, OutputFolder);
-        if (!success)
+        try
         {
-            WriteStatus("youtube-dl invocation failed. Aborting.");
+            if (!VerifyCanRun()) return;
 
-            return;
+            Dispatcher?.Invoke(() => UnlockControls = false);
+
+            var toolsReader = PrepareTools(out var youtubeDlPath, out var ffmpegPath);
+            if (!toolsReader) return;
+
+            var success = await InvokeYoutubeDl(youtubeDlPath, ffmpegPath, OutputFolder);
+            if (!success)
+            {
+                WriteStatus("youtube-dl invocation failed. Aborting.");
+
+                return;
+            }
+
+            if (OpenOutputAfterDownload)
+                OpenOutputFolder(OutputFolder);
+
+            WriteStatus("Done!");
         }
-
-        if (OpenOutputAfterDownload)
-            OpenOutputFolder(OutputFolder);
-
-        WriteStatus("Done!");
+        catch (Exception ex)
+        {
+            WriteStatus("An error occurred: " + ex.Message);
+        }
+        finally
+        {
+            Dispatcher?.Invoke(() => UnlockControls = true);
+        }
     }
 
     private string? AskForOutputFolder()

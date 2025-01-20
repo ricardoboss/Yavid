@@ -15,7 +15,7 @@
     <AssetsFolder>$(MSBuildThisFileDirectory)assets\</AssetsFolder>
     <DownloadFolder>$(BaseIntermediateOutputPath)download\</DownloadFolder>
 
-    <YtDlpVersion>2024.12.23</YtDlpVersion>
+    <YtDlpVersion>2025.01.15</YtDlpVersion>
     <YtDlpFileName>yt-dlp.exe</YtDlpFileName>
     <YtDlpDownloadUrl>https://github.com/yt-dlp/yt-dlp/releases/download/$(YtDlpVersion)/yt-dlp.exe</YtDlpDownloadUrl>
     <YtDlpDownloadFolder>$(DownloadFolder)\yt-dlp-$(YtDlpVersion)\</YtDlpDownloadFolder>

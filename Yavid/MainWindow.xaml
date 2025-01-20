@@ -33,25 +33,38 @@
 
             <TextBlock Grid.Row="0" Grid.Column="0" Padding="5">1. Choose output folder:</TextBlock>
             <TextBox Grid.Row="0" Grid.Column="2" Padding="5"
+                     IsEnabled="{Binding Path=UnlockControls}"
                      Text="{Binding Path=OutputFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Grid.Row="0" Grid.Column="4" Padding="15,5" Click="ChooseOutputFolder_Click">Choose</Button>
+            <Button Grid.Row="0" Grid.Column="4" Padding="15,5" IsEnabled="{Binding Path=UnlockControls}"
+                    Click="ChooseOutputFolder_Click">
+                Choose
+            </Button>
             <CheckBox Grid.Row="2" Grid.Column="2"
+                      IsEnabled="{Binding Path=UnlockControls}"
                       IsChecked="{Binding Path=OpenOutputAfterDownload, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 Open after download
             </CheckBox>
             <TextBlock Grid.Row="4" Grid.Column="0" Padding="5">2. Paste Url:</TextBlock>
             <TextBox Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3" Padding="5"
+                     IsEnabled="{Binding Path=UnlockControls}"
                      Text="{Binding Path=PlaylistUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal">
                 <CheckBox
+                    IsEnabled="{Binding Path=UnlockControls}"
                     IsChecked="{Binding Path=IncludeThumbnails, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     Include Thumbnail
                 </CheckBox>
                 <Separator Width="10" Background="Transparent" />
-                <CheckBox IsChecked="{Binding Path=OnlyKeepAudio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">Only keep Audio</CheckBox>
+                <CheckBox IsEnabled="{Binding Path=UnlockControls}"
+                          IsChecked="{Binding Path=OnlyKeepAudio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    Only keep Audio
+                </CheckBox>
             </StackPanel>
             <TextBlock Grid.Row="8" Grid.Column="0" Padding="5">3. Click:</TextBlock>
-            <Button Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3" Padding="15,5" Click="DownloadButton_Click">Download</Button>
+            <Button Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3" Padding="15,5"
+                    IsEnabled="{Binding Path=UnlockControls}" Click="DownloadButton_Click">
+                Download
+            </Button>
             <TextBlock Grid.Row="10" Grid.Column="0" Padding="5">4. Observe:</TextBlock>
             <ScrollViewer Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="3" HorizontalScrollBarVisibility="Auto">
                 <TextBlock Text="{Binding Path=Status, Mode=OneWay}" />
